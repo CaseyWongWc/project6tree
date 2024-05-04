@@ -53,12 +53,10 @@ public class BinaryNode <T>
 
     /** Detects whether this node has a left child.
     @return  True if the node has a left child. */
-    public boolean hasleftChild()
+    public boolean hasLeftChild()
     {
         return leftChild != null;
     }
-
-
 
     public BinaryNode<T> getRightChild()
     {
@@ -72,7 +70,7 @@ public class BinaryNode <T>
     }
 
 
-    public boolean hasrightChild()
+    public boolean hasRightChild()
     {
         return rightChild != null;
     }

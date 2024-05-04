@@ -30,11 +30,14 @@ public class BinaryTree<T> implements BinaryTreeInterface<T>
       initializeTree(rootData, leftTree, rightTree);
    } // end constructor
 
-    public void setTree(T rootData, BinaryTreeInterface<T> leftTree,
-                                   BinaryTreeInterface<T> rightTree)
+   public void setTree(T rootData) 
    {
-      initializeTree(rootData, (BinaryTree<T>)leftTree,
-                               (BinaryTree<T>)rightTree);
+      root = new BinaryNode<>(rootData);
+   }
+
+   public void setTree(T rootData, BinaryTreeInterface<T> leftTree, BinaryTreeInterface<T> rightTree)
+   {
+      initializeTree(rootData, (BinaryTree<T>)leftTree,(BinaryTree<T>)rightTree);
    } // end setTree
 
 	/*private void initializeTree(T rootData, BinaryTree<T> leftTree,
@@ -251,10 +254,9 @@ public class BinaryTree<T> implements BinaryTreeInterface<T>
 
       public boolean hasNext() 
       {
-         return (currentNode.getRightChild() != null || !nodeStack.isEmpty());
+         return !nodeStack.isEmpty() || currentNode != null;
       }
 
-      
       public T next() 
       {
          BinaryNode<T> nextNode = null;
@@ -334,81 +336,98 @@ public class BinaryTree<T> implements BinaryTreeInterface<T>
    }
 
 
-   public void postorderTraverse()
-   {
-      postorderTraverse(root);
-   }
 
    public Iterator<T> getPostorderIterator()
    {
-      return new PostorderIterator();
+      return new PostorderIterator(root);
    }
 
    private class PostorderIterator implements Iterator<T>
    {
-      private StackInterface<BinaryNode<T>> nodeStack;
+      private StackInterface<BinaryNode<T>> nodeStack = new LinkedStack<>();
       private BinaryNode<T> currentNode;
+      private BinaryNode<T> lastVisited;
 
-      public PostorderIterator()
+      public PostorderIterator(BinaryNode<T> root)
       {
-         nodeStack = new LinkedStack<>();
-         currentNode = root;
+         if (root != null)
+         {
+            nodeStack.push(root);
+            currentNode = root;
+         }
       } // end default constructor
 
+      // !!! CONSIDER THIS !!!
       public boolean hasNext() 
       {
-         return ((currentNode.getLeftChild() != null && currentNode.getRightChild() != null) || !nodeStack.isEmpty());
+         //return ((currentNode.getLeftChild() != null && currentNode.getRightChild() != null) || !nodeStack.isEmpty());
+         return !nodeStack.isEmpty();
       }
 
-      
       public T next() 
       {
-         BinaryNode<T> nextNode = null;
+        while(hasNext())
+        {
+         currentNode = nodeStack.peek();
 
-         while (currentNode.getLeftChild() != null)
+         //if you havent went down the left child already (if it exists):
+         if (lastVisited == null) 
          {
-            nodeStack.push(currentNode);
-            currentNode = currentNode.getLeftChild(); 
-         }
-         while (currentNode.getRightChild() != null)
-         {
-            nodeStack.push(currentNode);
-            currentNode = currentNode.getLeftChild();
+            //move to the left child if exists
+            if (currentNode.getLeftChild() != null) 
+            {
+               nodeStack.push(currentNode.getLeftChild());
+            }
+            //move to right child if it exists
+            else if (currentNode.getRightChild() != null) 
+            {
+               nodeStack.push(currentNode.getRightChild());
+            }
+            //if (no children), return, move up a level, mark current as lastvisited
+            else  
+            {
+               nodeStack.pop();
+               lastVisited = currentNode;
+               return currentNode.getData(); //return information
+            }
          }
 
-         if (currentNode.getLeftChild() == null && currentNode.getRightChild() == null)
+         // if you have already visited left child,move down the right side
+         else if (currentNode.getLeftChild() == lastVisited)
          {
-         nextNode = currentNode;
-         currentNode = nodeStack.pop().getRightChild();
-         return nextNode.getData();
+            //clear last visited, and keep on going right until you hit leaf
+            if (currentNode.getRightChild() != null)
+            {
+               nodeStack.push(currentNode.getRightChild());
+               lastVisited = null;
+            }
+            //mark current node as last visited, move back up a step
+            else
+            {
+               nodeStack.pop();
+               lastVisited = currentNode;
+               return currentNode.getData();
+            }
          }
 
-         return null;
-        /*
-         if (currentNode.getLeftChild() == null && currentNode.getRightChild() == null)
+         //after you have already visted left and right childs,
+         //mark current as last visited and go up a step
+         else
          {
-            nextNode = currentNode;
-            currentNode = nodeStack.pop().getRightChild();
-            return nextNode.getData();
+            nodeStack.pop();
+            lastVisited = currentNode;
+            return currentNode.getData();            
          }
-         if (currentNode.getLeftChild() != null && currentNode.getRightChild() != null)
-         {
-            nextNode = currentNode;
-            currentNode = nodeStack.pop().getRightChild();
-            return nextNode.getData();
-         }*/
-         /* 
-         if (currentNode != null && currentNode.getLeftChild() != null & currentNode.getRightChild() != null)
-         {
-            nextNode = nodeStack.pop();
-            currentNode = nodeStack.peek().getRightChild();
-            return nextNode.getData();
-         }
-         return null;*/
+        }
+         throw new NoSuchElementException();
       }
-      
    }
-      private void postorderTraverse(BinaryNode<T> node)
+
+   public void postorderTraverse()
+   {
+      postorderTraverse(root);
+   }
+   private void postorderTraverse(BinaryNode<T> node)
    {
       if(node !=null)
       {
@@ -419,15 +438,61 @@ public class BinaryTree<T> implements BinaryTreeInterface<T>
       }
    }
 
-   @Override
-   public Iterator<T> getLevelOrderIterator() {
-      // TODO Auto-generated method stub
-      throw new UnsupportedOperationException("Unimplemented method 'getLevelOrderIterator'");
+   public Iterator<T> getLevelOrderIterator() 
+   {
+      return new LevelOrderIterator(root);
    }
 
-   @Override
-   public void setTree(T rootData) {
-      // TODO Auto-generated method stub
-      throw new UnsupportedOperationException("Unimplemented method 'setTree'");
+   private class LevelOrderIterator implements Iterator<T>
+   {
+
+      private QueueInterface<BinaryNode<T>> nodeQueue; 
+      private BinaryNode<T> currentNode;
+
+      public LevelOrderIterator(BinaryNode<T> root)
+      {
+         if (root != null)
+         {
+            nodeQueue = new LinkedQueue<>();
+            nodeQueue.enqueue(root);
+         }
+      }
+      @Override
+      public boolean hasNext() 
+      {
+       return !nodeQueue.isEmpty(); 
+      }
+
+      @Override
+      public T next() 
+      {
+         while (hasNext())
+         {
+            currentNode = nodeQueue.dequeue();
+
+            if (currentNode.getLeftChild() != null)
+            {
+               nodeQueue.enqueue(currentNode.getLeftChild());
+            }
+            if (currentNode.getRightChild() != null)
+            {
+               nodeQueue.enqueue(currentNode.getRightChild());
+            }
+
+            return currentNode.getData();
+         }
+         //else
+         {
+            throw new NoSuchElementException();
+         }
+
+      }
    }
-} // end BinaryTree
+
+
+
+
+  
+
+}
+

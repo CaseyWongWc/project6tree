@@ -60,14 +60,23 @@ public class BinaryTreeDemo
    }
    System.out.println();
    
-      //Display nodes post postorder
-      System.out.println("An postorder traversal visits nodes in this order:");
-      Iterator<String> postOrder = aTree.getPostorderIterator();
-      while (postOrder.hasNext())
-      {
-         System.out.print(postOrder.next()+" ");
-      }
-      System.out.println();
+   // Display nodes post postorder
+   System.out.println("An postorder traversal visits nodes in this order:");
+   Iterator<String> postOrder = aTree.getPostorderIterator();
+   while (postOrder.hasNext()) 
+   {
+      System.out.print(postOrder.next() + " ");
+   }
+   System.out.println();
+
+  // Display nodes post levelorder
+  System.out.println("A levelorder traversal visits nodes in this order:");
+  Iterator<String> levelorder = aTree.getLevelOrderIterator();
+  while (levelorder.hasNext()) 
+  {
+     System.out.print(levelorder.next() + " ");
+  }
+  System.out.println();  
  }
  
  /* 
